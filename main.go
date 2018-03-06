@@ -73,8 +73,8 @@ func main() {
 		panic(err)
 	}
 
-	adminPasswordBase64 := base64.StdEncoding.EncodeToString(adminPassword)
-	adminApiKeyBase64 := base64.StdEncoding.EncodeToString(adminApiKey)
+	adminPasswordBase64 := base64.StdEncoding.EncodeToString(string(adminPassword))
+	adminApiKeyBase64 := base64.StdEncoding.EncodeToString(string(adminApiKey))
 
 	log.Printf("Admin API key is: %s", adminApiKey)
 
