@@ -10,6 +10,10 @@ a oneshot dm controller for linuxkit
 
 ### behaviour
 
+```
+./dm-linuxkit --zpool-device=/dev/nvme0,/dev/nvme1 postgres --from=dothub.com/justincormack/postgres --mountpoint=/var/lib/postgres
+```
+
 1. init zpool if not exists
 
   - zpool import (auto-detects zpools on block devices)
@@ -23,6 +27,7 @@ a oneshot dm controller for linuxkit
 5. wait for dotmesh-server to come up on :6969 (maybe it should listen on a UNIX socket!)
 6. talk to the dotmesh API
 7. init or pull a dot, based on config below.
+8. kills dotmesh, waits for it to shut down, kills etcd, waits for it to shut down, exits.
 
 ### service
 
