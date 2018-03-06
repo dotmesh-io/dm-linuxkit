@@ -11,7 +11,8 @@ a oneshot dm controller for linuxkit
 ### behaviour
 
 ```
-./dm-linuxkit --zpool-device=/dev/nvme0,/dev/nvme1 postgres --from=dothub.com/justincormack/postgres --mountpoint=/var/lib/postgres
+./dm-linuxkit --zpool-device=/dev/nvme0,/dev/nvme1 postgres \
+    --from=dothub.com/justincormack/postgres --mountpoint=/var/lib/postgres
 ```
 
 1. init zpool if not exists
@@ -45,14 +46,18 @@ run a long-running service after the initial daemon.
 ### case 1 - seperate dots
 
 ```
-./dm-linuxkit --zpool-device=/dev/nvme0,/dev/nvme1 postgres --from=dothub.com/justincormack/postgres --mountpoint=/var/lib/postgres
-./dm-linuxkit --zpool-device=/dev/nvme0,/dev/nvme1 redis --from=dothub.com/justincormack/redis --mountpoint=/var/lib/redis
+./dm-linuxkit --zpool-device=/dev/nvme0,/dev/nvme1 postgres \
+    --from=dothub.com/justincormack/postgres --mountpoint=/var/lib/postgres
+./dm-linuxkit --zpool-device=/dev/nvme0,/dev/nvme1 redis \
+    --from=dothub.com/justincormack/redis --mountpoint=/var/lib/redis
 ```
 
 ### case 2 - subdots
 ```
-./dm-linuxkit --zpool-device=/dev/nvme0,/dev/nvme1 myapp.postgres --from=dothub.com/justincormack/myapp --mountpoint=/var/lib/postgres
-./dm-linuxkit --zpool-device=/dev/nvme0,/dev/nvme1 myapp.redis --from=dothub.com/justincormack/myapp --mountpoint=/var/lib/redis
+./dm-linuxkit --zpool-device=/dev/nvme0,/dev/nvme1 myapp.postgres \
+    --from=dothub.com/justincormack/myapp --mountpoint=/var/lib/postgres
+./dm-linuxkit --zpool-device=/dev/nvme0,/dev/nvme1 myapp.redis \
+    --from=dothub.com/justincormack/myapp --mountpoint=/var/lib/redis
 ```
 
 (second 'from' is a no-op)
