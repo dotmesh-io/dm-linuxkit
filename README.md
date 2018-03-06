@@ -11,9 +11,11 @@ a oneshot dm controller for linuxkit
 ### behaviour
 
 ```
-./dm-linuxkit --zpool-device=/dev/nvme0,/dev/nvme1 postgres \
-    --from=dothub.com/justincormack/postgres --mountpoint=/var/lib/postgres
+dm-linuxkit --storage-device=/dev/nvme0,/dev/nvme1 --dot=postgres \
+    --seed=dothub.com/justincormack/postgres --mountpoint=/var/lib/postgres
 ```
+
+`--dot`, `--mountpoint` and `--storage-device` are mandatory arguments
 
 1. init zpool if not exists
 
@@ -35,7 +37,7 @@ a oneshot dm controller for linuxkit
 run a long-running service after the initial daemon.
 
 ```
-./dm-linuxkit --zpool-device=/dev/nvme0 --zpool-device=/dev/nvme1 daemon
+dm-linuxkit --zpool-device=/dev/nvme0 --zpool-device=/dev/nvme1 --daemon
 ```
 
 ### use cases
@@ -46,21 +48,29 @@ run a long-running service after the initial daemon.
 ### case 1 - seperate dots
 
 ```
-./dm-linuxkit --zpool-device=/dev/nvme0,/dev/nvme1 postgres \
-    --from=dothub.com/justincormack/postgres --mountpoint=/var/lib/postgres
-./dm-linuxkit --zpool-device=/dev/nvme0,/dev/nvme1 redis \
-    --from=dothub.com/justincormack/redis --mountpoint=/var/lib/redis
+dm-linuxkit --zpool-device=/dev/nvme0,/dev/nvme1 --dot=postgres \
+    --seed=dothub.com/justincormack/postgres --mountpoint=/var/lib/postgres
+dm-linuxkit --zpool-device=/dev/nvme0,/dev/nvme1 --dot=redis \
+    --seed=dothub.com/justincormack/redis --mountpoint=/var/lib/redis
 ```
 
 ### case 2 - subdots
 ```
-./dm-linuxkit --zpool-device=/dev/nvme0,/dev/nvme1 myapp.postgres \
-    --from=dothub.com/justincormack/myapp --mountpoint=/var/lib/postgres
-./dm-linuxkit --zpool-device=/dev/nvme0,/dev/nvme1 myapp.redis \
-    --from=dothub.com/justincormack/myapp --mountpoint=/var/lib/redis
+dm-linuxkit --zpool-device=/dev/nvme0,/dev/nvme1 --dot=myapp.postgres \
+    --seed=dothub.com/justincormack/myapp --mountpoint=/var/lib/postgres
+dm-linuxkit --zpool-device=/dev/nvme0,/dev/nvme1 --dot=myapp.redis \
+    --seed=dothub.com/justincormack/myapp --mountpoint=/var/lib/redis
 ```
 
-(second 'from' is a no-op)
+(second 'seed' is a no-op)
+
+### running tests
+
+On Ubuntu 16.04+ or macOS where you've already [installed dotmesh](https://docs.dotmesh.com/install-setup/docker/) so that the kernel module is already loaded.
+
+```
+make test
+```
 
 ### future stuff
 
