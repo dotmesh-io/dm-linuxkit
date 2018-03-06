@@ -28,8 +28,9 @@ a oneshot dm controller for linuxkit
 
 run a long-running service after the initial daemon.
 
+```
 ./dm-linuxkit --zpool-device=/dev/nvme0 --zpool-device=/dev/nvme1 daemon
-syntax:
+```
 
 ### use cases
 
