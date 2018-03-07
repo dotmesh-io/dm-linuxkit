@@ -1,6 +1,55 @@
 # dm-linuxkit
+A utility for mounting dotmesh dots on a local running operating system, whether VM or bare-metal.
 
-a oneshot dm controller for linuxkit
+## Purpose
+[dotmesh](https://dotmesh.com) is a system for capturing and managing snapshots of data. Combined with [dothub](https://dothub.com), it allows you to capture, store, ship, share and replay data at any given moment in time.
+
+dotmesh itself already has native support for installing and making its fantastic capabilities available to containers running in docker and kubernetes.
+
+This utility gives you the ability to install and run dotmesh locally, without the need for containers or orchestration systems, but still working well with them, of course.
+
+For example, if you are running postgres locally on your server, you store all your data in a single directory, by default `/var/lib/postgres`. If you were running in kubernetes, you would use the dotmesh kubernetes volume driver and it would "just work". But you are running locally; how do you make `/var/lib/postgres` be a dot and gain all of the dot goodness, a.k.a. dotness?
+
+Run `dm-linuxkit`.
+
+Provide it with three options:
+
+* Where the dot should be mounted
+* Which underlying storage to use
+* What to name the dot
+
+Optionally, you even can seed it with a dot from dothub:
+
+* What dot to use for seeding
+
+Once run, your process will use the local directory, but you will have all of the dot benefits. 
+
+For our above example:
+
+```
+dm-linuxkit --storage-device=/dev/nvme0,/dev/nvme1 --dot=postgres \
+    --mountpoint=/var/lib/postgres
+```
+
+This will:
+
+1. Initialize a single-node dotmesh cluster right here on our server, whether virtual or bare-metal.
+2. Use storage from `/dev/nvme0` and `/dev/nvme1`
+3. Create a dot called `postgres`
+4. Mount the dot at `/var/lib/postgres`
+
+If you want to seed it:
+
+
+```
+dm-linuxkit --storage-device=/dev/nvme0,/dev/nvme1 --dot=postgres \
+    --seed=dothub.com/justincormack/postgres --mountpoint=/var/lib/postgres
+```
+
+In addition to the above steps, this will seed it from the dot at `dothub.com/justincormack/postgres`.
+
+Presto! You have dotness available on your server. No containers required!
+
 
 ## design
 
@@ -10,9 +59,6 @@ a oneshot dm controller for linuxkit
 
 ### behaviour
 
-```
-dm-linuxkit --storage-device=/dev/nvme0,/dev/nvme1 --dot=postgres \
-    --seed=dothub.com/justincormack/postgres --mountpoint=/var/lib/postgres
 ```
 
 `--dot`, `--mountpoint` and `--storage-device` are mandatory arguments
