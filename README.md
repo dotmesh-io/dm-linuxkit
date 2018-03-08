@@ -59,8 +59,6 @@ Presto! You have dotness available on your server. No containers required!
 
 ### behaviour
 
-```
-
 `--dot`, `--mountpoint` and `--storage-device` are mandatory arguments
 
 1. init zpool if not exists
