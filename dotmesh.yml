@@ -1,0 +1,53 @@
+kernel:
+  image: linuxkit/kernel:4.9.95
+  cmdline: "console=tty0 console=ttyS0 console=ttyAMA0"
+init:
+  - justincormack/zfs-kmod:4.9.95
+  - linuxkit/init:11929b0007b87384f7372e9265067479c4616586
+  - linuxkit/runc:acba8886e4b1318457c711700f695a02fef9493d
+  - linuxkit/containerd:f197e7cbb2ede4370b75127c76de6f7b2e3d9873
+  - linuxkit/ca-certificates:v0.3
+  - linuxkit/getty:v0.3
+onboot:
+  - name: sysctl
+    image: linuxkit/sysctl:v0.3
+  - name: dhcpcd
+    image: linuxkit/dhcpcd:v0.3
+    command: ["/sbin/dhcpcd", "--nobackground", "-f", "/dhcpcd.conf", "-1"]
+  - name: modprobe
+    image: linuxkit/modprobe:7605d92569d45df9e4a9fe4e12a777d2e7944976
+    command: ["modprobe", "zfs"]
+  - name: dotmesh
+    image: lmarsden/dm-linuxkit
+    capabilities:
+     - all
+    binds:
+     - /dev:/dev
+     - /var:/var:rshared,rbind
+     - /etc/resolv.conf:/etc/resolv.conf
+    rootfsPropagation: shared
+    command: ["dm-linuxkit", "-dot=test", "-storage-device=/dev/sda", "-mountpoint=/var", "-oneshot", "-pool-name=dotmesh-pool"]
+onshutdown:
+  - name: shutdown
+    image: busybox:latest
+    command: ["/bin/echo", "so long and thanks for all the fish"]
+services:
+  - name: rngd
+    image: linuxkit/rngd:v0.3
+  - name: dotmesh
+    image: lmarsden/dm-linuxkit
+    capabilities:
+     - all
+    binds:
+     - /dev:/dev
+     - /var:/var:rshared,rbind
+     - /etc/resolv.conf:/etc/resolv.conf
+    rootfsPropagation: shared
+    command: ["dm-linuxkit", "-dot=test", "-storage-device=/dev/sda", "-mountpoint=/var", "-pool-name=dotmesh-pool"]
+files:
+  - path: etc/linuxkit-config
+    metadata: yaml
+trust:
+  org:
+    - linuxkit
+    - library
