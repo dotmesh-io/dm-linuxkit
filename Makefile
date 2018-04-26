@@ -4,7 +4,7 @@ disk.img:
 	dd if=/dev/zero of=$@ bs=1M count=64
 
 build: *.go
-	docker build -t dm-linuxkit .
+	docker build -t lmarsden/dm-linuxkit .
 
 test: build disk.img
 	# This Makefile adventure was fun, but let's move this into a go test.

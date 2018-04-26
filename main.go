@@ -36,7 +36,7 @@ func main() {
 		"seed", "",
 		"Address of a datadot to seed from e.g. dothub.com/justincormack/postgres",
 	)
-	flagDaemon := flag.Bool(
+	flagOneShot := flag.Bool(
 		"oneshot", false,
 		"Exit immediately, useful for initializing things on boot. "+
 			"Otherwise, runs as long-running daemon to support e.g. dm CLI interactions",
@@ -45,7 +45,7 @@ func main() {
 
 	log.Printf(
 		"%s %s %s %s %s %b",
-		*flagStorageDevice, *flagPool, *flagDot, *flagMountpoint, *flagSeed, *flagDaemon,
+		*flagStorageDevice, *flagPool, *flagDot, *flagMountpoint, *flagSeed, *flagOneShot,
 	)
 
 	err := setupZFS(*flagPool, strings.Split(*flagStorageDevice, ","))
@@ -88,16 +88,21 @@ func main() {
 		time.Sleep(1 * time.Second)
 	}
 
+	// TODO if flagSeed { clone ... } else {
 	err = doRPC(
 		"localhost", "admin", adminApiKey,
 		"DotmeshRPC.Create",
 		map[string]string{"Name": *flagDot, "Namespace": "admin"},
 		&result,
 	)
+	// }
 	if err != nil {
 		panic(err)
 	}
 	log.Printf("Created dot %s!", *flagDot)
+
+	// TODO: mount the dot on the filesystem at flagMountpoint, after doing
+	// mkdir flagMountpoint
 
 	err = dotmeshCmd.Process.Signal(syscall.SIGTERM)
 	if err != nil {
@@ -122,7 +127,6 @@ func main() {
 }
 
 func setupZFS(pool string, devices []string) error {
-
 	_, err := findLocalPoolId(pool)
 	if err == nil {
 		// pool already exists
@@ -130,12 +134,21 @@ func setupZFS(pool string, devices []string) error {
 	}
 
 	return createPool(pool, devices)
-
 }
 
 func runEtcd(pool string) (*exec.Cmd, error) {
 	// 1. create a zfs filesystem for etcd if it doesn't exist already
-	err := createFilesystem("dotmesh-etcd", pool)
+	exists, err := filesystemExists(pool, "dotmesh-etcd")
+	if err != nil {
+		panic(err)
+	}
+	if !exists {
+		err := createFilesystem(pool, "dotmesh-etcd")
+		if err != nil {
+			return nil, err
+		}
+	}
+	err = mountFilesystem(pool, "dotmesh-etcd", ETCD_ENDPOINT)
 	if err != nil {
 		return nil, err
 	}
