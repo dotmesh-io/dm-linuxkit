@@ -45,7 +45,7 @@ func filesystemExists(pool, filesystem string) (bool, error) {
 
 func createPool(pool string, devices []string) error {
 	// create the pool
-	args := []string{"create", pool}
+	args := []string{"create", "-f", pool}
 	args = append(args, devices...)
 	cmd := exec.Command(ZPOOL, args...)
 	output, err := cmd.CombinedOutput()
