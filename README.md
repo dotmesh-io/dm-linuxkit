@@ -1,5 +1,5 @@
 # dm-linuxkit
-A utility for mounting dotmesh dots on a local running operating system, whether VM or bare-metal.
+A utility for mounting dotmesh dots on a local running operating system, whether VM or bare-metal, in particular integrating with (but not requiring) [LinuxKit from Docker](https://github.com/linuxkit/linuxkit).
 
 ## Purpose
 [dotmesh](https://dotmesh.com) is a system for capturing and managing snapshots of data. Combined with [dothub](https://dothub.com), it allows you to capture, store, ship, share and replay data at any given moment in time.
