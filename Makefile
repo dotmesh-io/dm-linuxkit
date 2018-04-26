@@ -22,3 +22,7 @@ test: build disk.img
 	docker run -v /dev/zfs:/dev/zfs \
 		--privileged -v $(PWD)/disk.img:$(PWD)/disk.img dm-linuxkit \
 		zpool destroy $(TEST_POOL)
+
+linuxkit: build
+	linuxkit build dotmesh.yml
+	linuxkit run qemu -disk size=1024M -mem 2048 dotmesh
