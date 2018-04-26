@@ -117,6 +117,12 @@ On Ubuntu 16.04+ or macOS where you've already [installed dotmesh](https://docs.
 make test
 ```
 
+To start dm-linuxkit in a LinuxKit VM (assuming you've installed LinuxKit):
+
+```
+make linuxkit
+```
+
 ### future stuff
 
 sub-cases of 2 above.
