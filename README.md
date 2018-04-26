@@ -22,8 +22,6 @@ Optionally, you even can seed it with a dot from dothub:
 
 * What dot to use for seeding
 
-`--remote-username` and `--remote-apikey` are necessary arguments if you pass `--seed`.
-
 Once run, your process will use the local directory, but you will have all of the dot benefits. 
 
 For our above example:
@@ -46,6 +44,8 @@ If you want to seed it:
 dm-linuxkit --storage-device=/dev/nvme0,/dev/nvme1 --dot=postgres \
     --seed=dothub.com/justincormack/postgres --mountpoint=/var/lib/postgres
 ```
+
+`--remote-username` and `--remote-apikey` are necessary arguments if you pass `--seed`.
 
 In addition to the above steps, this will seed it from the dot at `dothub.com/justincormack/postgres`.
 
