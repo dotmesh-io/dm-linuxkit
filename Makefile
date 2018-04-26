@@ -22,4 +22,3 @@ test: build disk.img
 	docker run -v /dev/zfs:/dev/zfs \
 		--privileged -v $(PWD)/disk.img:$(PWD)/disk.img dm-linuxkit \
 		zpool destroy $(TEST_POOL)
-

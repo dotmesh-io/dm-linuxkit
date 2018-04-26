@@ -9,10 +9,11 @@ import (
 	"os/exec"
 	"strings"
 	"syscall"
+	"time"
 )
 
 const ETCD_DATA_DIR = "/var/dotmesh/etcd"
-const ETCD_ENDPOINT = "unix:///run/dotmesh/etcd"
+const ETCD_ENDPOINT = "http://localhost:2379"
 
 func main() {
 	flagStorageDevice := flag.String(
@@ -57,13 +58,6 @@ func main() {
 		panic(err)
 	}
 
-	dotmeshCmd, err := runDotmesh(*flagPool)
-	if err != nil {
-		panic(err)
-	}
-
-	// TODO: wait for dotmesh to start, make a dot.
-
 	adminPassword, err := GenerateRandomString(16)
 	if err != nil {
 		panic(err)
@@ -73,30 +67,35 @@ func main() {
 		panic(err)
 	}
 
-	adminPasswordBase64 := base64.StdEncoding.EncodeToString(string(adminPassword))
-	adminApiKeyBase64 := base64.StdEncoding.EncodeToString(string(adminApiKey))
+	dotmeshCmd, err := runDotmesh(*flagPool, adminPassword, adminApiKey)
+	if err != nil {
+		panic(err)
+	}
+
+	// TODO: wait for dotmesh to start, make a dot.
 
 	log.Printf("Admin API key is: %s", adminApiKey)
 
-	var result string
+	var result bool
 
 	for {
-		err := doRPC("localhost", "admin", adminApiKeyBase64, "DotmeshRPC.Ping", nil, *result)
+		err := doRPC("localhost", "admin", adminApiKey, "DotmeshRPC.Ping", nil, &result)
 		if err == nil {
 			log.Printf("Connected! Yay!")
 			break
 		}
 		log.Printf("Error, retrying... %v", err)
+		time.Sleep(1 * time.Second)
 	}
 
-	err := doRPC(
-		"localhost", "admin", adminApiKeyBase64,
+	err = doRPC(
+		"localhost", "admin", adminApiKey,
 		"DotmeshRPC.Create",
 		map[string]string{"Name": *flagDot, "Namespace": "admin"},
-		*result,
+		&result,
 	)
 	if err != nil {
-		return err
+		panic(err)
 	}
 	log.Printf("Created dot %s!", *flagDot)
 
@@ -107,7 +106,7 @@ func main() {
 
 	err = dotmeshCmd.Wait()
 	if err != nil {
-		log.Printf("dotmesh exited with %v, this is be normal (we just killed it)", err)
+		log.Printf("dotmesh exited with %v, this is normal (we just killed it)", err)
 	}
 
 	err = etcdCmd.Process.Signal(syscall.SIGTERM)
@@ -142,8 +141,10 @@ func runEtcd(pool string) (*exec.Cmd, error) {
 	}
 	// 2. start etcd
 	cmd := exec.Command("etcd",
-		"-data-dir", ETCD_DATA_DIR, "-listen-client-urls", ETCD_ENDPOINT,
+		"-data-dir", ETCD_DATA_DIR,
 	)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	err = cmd.Start()
 	if err != nil {
 		return nil, err
@@ -151,10 +152,13 @@ func runEtcd(pool string) (*exec.Cmd, error) {
 	return cmd, nil
 }
 
-func runDotmesh(pool string) (*exec.Cmd, error) {
-	cmd := exec.Command("etcd",
-		"-data-dir", ETCD_DATA_DIR, "-listen-client-urls", ETCD_ENDPOINT,
-	)
+func runDotmesh(pool, adminPassword, adminApiKey string) (*exec.Cmd, error) {
+	adminPasswordBase64 := base64.StdEncoding.EncodeToString([]byte(adminPassword))
+	adminApiKeyBase64 := base64.StdEncoding.EncodeToString([]byte(adminApiKey))
+
+	cmd := exec.Command("dotmesh-server")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env,
 		// TODO: disable docker volume plugin
@@ -162,6 +166,8 @@ func runDotmesh(pool string) (*exec.Cmd, error) {
 		"DISABLE_FLEXVOLUME=1",
 		fmt.Sprintf("DOTMESH_ETCD_ENDPOINT=%s", ETCD_ENDPOINT),
 		fmt.Sprintf("POOL=%s", pool),
+		fmt.Sprintf("INITIAL_ADMIN_API_KEY=%s", adminApiKeyBase64),
+		fmt.Sprintf("INITIAL_ADMIN_PASSWORD=%s", adminPasswordBase64),
 	)
 	err := cmd.Start()
 	if err != nil {
