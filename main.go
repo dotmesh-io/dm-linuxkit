@@ -156,7 +156,7 @@ func runEtcd(pool string) (*exec.Cmd, error) {
 			return nil, err
 		}
 	}
-	err = mountFilesystem(pool, "dotmesh-etcd", ETCD_ENDPOINT)
+	err = mountFilesystem(pool, "dotmesh-etcd", ETCD_DATA_DIR)
 	if err != nil {
 		return nil, err
 	}
