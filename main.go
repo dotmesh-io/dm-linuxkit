@@ -104,24 +104,32 @@ func main() {
 	// TODO: mount the dot on the filesystem at flagMountpoint, after doing
 	// mkdir flagMountpoint
 
-	err = dotmeshCmd.Process.Signal(syscall.SIGTERM)
-	if err != nil {
-		panic(err)
-	}
-
-	err = dotmeshCmd.Wait()
-	if err != nil {
-		log.Printf("dotmesh exited with %v, this is normal (we just killed it)", err)
-	}
-
-	err = etcdCmd.Process.Signal(syscall.SIGTERM)
-	if err != nil {
-		panic(err)
-	}
-
-	err = etcdCmd.Wait()
-	if err != nil {
-		log.Printf("etcd exited with %v, this is be normal (we just killed it)", err)
+	if *flagOneShot {
+		err = dotmeshCmd.Process.Signal(syscall.SIGTERM)
+		if err != nil {
+			panic(err)
+		}
+		err = dotmeshCmd.Wait()
+		if err != nil {
+			log.Printf("dotmesh exited with %v, this is normal (we just killed it)", err)
+		}
+		err = etcdCmd.Process.Signal(syscall.SIGTERM)
+		if err != nil {
+			panic(err)
+		}
+		err = etcdCmd.Wait()
+		if err != nil {
+			log.Printf("etcd exited with %v, this is be normal (we just killed it)", err)
+		}
+	} else {
+		err = dotmeshCmd.Wait()
+		if err != nil {
+			log.Printf("dotmesh exited with %v, this is unusual (we were in non-oneshot mode)", err)
+		}
+		err = etcdCmd.Wait()
+		if err != nil {
+			log.Printf("etcd exited with %v, this is unusual (we were in non-oneshot mode)", err)
+		}
 	}
 
 }
