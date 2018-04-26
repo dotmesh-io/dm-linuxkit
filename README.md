@@ -22,6 +22,8 @@ Optionally, you even can seed it with a dot from dothub:
 
 * What dot to use for seeding
 
+`--remote-username` and `--remote-apikey` are necessary arguments if you pass `--seed`.
+
 Once run, your process will use the local directory, but you will have all of the dot benefits. 
 
 For our above example:
@@ -39,7 +41,6 @@ This will:
 4. Mount the dot at `/var/lib/postgres`
 
 If you want to seed it:
-
 
 ```
 dm-linuxkit --storage-device=/dev/nvme0,/dev/nvme1 --dot=postgres \
@@ -71,7 +72,7 @@ Presto! You have dotness available on your server. No containers required!
 2. zfs create dotmesh-pool/dotmesh-etcd
 3. start an etcd process configured to write its state to /dotmesh-etcd and listen on a UNIX socket
 4. start dotmesh-server configured to connect to etcd on the unix socket
-5. wait for dotmesh-server to come up on :6969 (maybe it should listen on a UNIX socket!)
+5. wait for dotmesh-server to come up on :32607 (maybe it should listen on a UNIX socket!)
 6. talk to the dotmesh API
 7. init or pull a dot, based on config below.
 8. kills dotmesh, waits for it to shut down, kills etcd, waits for it to shut down, exits.
