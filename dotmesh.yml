@@ -17,6 +17,8 @@ onboot:
   - name: modprobe
     image: linuxkit/modprobe:7605d92569d45df9e4a9fe4e12a777d2e7944976
     command: ["modprobe", "zfs"]
+  - name: metadata
+    image: linuxkit/metadata:v0.4
   - name: dotmesh
     image: lmarsden/dm-linuxkit
     capabilities:
@@ -25,6 +27,7 @@ onboot:
      - /dev:/dev
      - /var:/var:rshared,rbind
      - /etc/resolv.conf:/etc/resolv.conf
+     - /run/config/dotmesh:/run/config/dotmesh
     rootfsPropagation: shared
     command: ["dm-linuxkit", "-dot=test", "-storage-device=/dev/sda", "-mountpoint=/var/dot/test", "-oneshot", "-pool-name=dotmesh-pool"]
 onshutdown:
@@ -42,6 +45,7 @@ services:
      - /dev:/dev
      - /var:/var:rshared,rbind
      - /etc/resolv.conf:/etc/resolv.conf
+     - /run/config/dotmesh:/run/config/dotmesh
     rootfsPropagation: shared
     command: ["dm-linuxkit", "-dot=test", "-storage-device=/dev/sda", "-mountpoint=/var/dot/test", "-pool-name=dotmesh-pool"]
 files:
