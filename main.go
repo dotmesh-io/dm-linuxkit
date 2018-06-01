@@ -122,9 +122,10 @@ func main() {
 	// mount points, rather than symlinks.
 	// Related: https://github.com/dotmesh-io/dotmesh/issues/421
 
-	err = mountFilesystem(
-		*flagPool,
-		"dmfs/"+lookupResult,
+	err = bindMountFilesystem(
+		// Seems like this MOUNT_PREFIX of /var is set in dotmesh utils.go
+		// (unless MOUNT_PREFIX is set, and we're not setting it...)
+		"/var/"+*flagPool+"/dmfs/"+lookupResult,
 		*flagMountpoint,
 	)
 	if err != nil {

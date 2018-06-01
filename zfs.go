@@ -13,6 +13,7 @@ import (
 const ZPOOL = "zpool"
 const ZFS = "zfs"
 const MOUNT_ZFS = "mount.zfs"
+const MOUNT = "mount"
 
 // TODO dedupe wrt dotmesh's zfs.go
 func findLocalPoolId(pool string) (string, error) {
@@ -94,6 +95,20 @@ func mountFilesystem(pool, filesystem, mountpoint string) error {
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("mount.zfs failed (%v): %s", err, output)
+	}
+	return nil
+}
+
+func bindMountFilesystem(from, to string) error {
+	err := makeDirectoryIfNotExists(to)
+	if err != nil {
+		return err
+	}
+	args := []string{"--bind", from, to}
+	cmd := exec.Command(MOUNT, args...)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("mount (bind) failed (%v): %s", err, output)
 	}
 	return nil
 }
