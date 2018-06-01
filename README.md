@@ -8,10 +8,10 @@ You need to create a `metadata.json` file with the dotmesh hub account like this
        "credentials": {
           "content": "username:API key"
        },
-       "local-admin-key": {
+       "admin-api-key": {
           "content": "key"
        },
-       "local-admin-password": {
+       "admin-password": {
           "content": "password"
        }
     }
