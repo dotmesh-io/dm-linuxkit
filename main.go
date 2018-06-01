@@ -104,6 +104,8 @@ func main() {
 	// TODO: mount the dot on the filesystem at flagMountpoint, after doing
 	// mkdir flagMountpoint
 
+	// SHUTDOWN FOLLOWS
+
 	if *flagOneShot {
 		err = dotmeshCmd.Process.Signal(syscall.SIGTERM)
 		if err != nil {

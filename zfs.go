@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"os"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -67,7 +69,26 @@ func createFilesystem(pool, filesystem string) error {
 	return nil
 }
 
+func makeDirectoryIfNotExists(directory string) error {
+	if _, err := os.Stat(directory); err != nil {
+		if os.IsNotExist(err) {
+			if err := os.MkdirAll(directory, 0700); err != nil {
+				log.Printf("[makeDirectoryIfNotExists] error creating %s: %+v", directory, err)
+				return err
+			}
+		} else {
+			log.Printf("[makeDirectoryIfNotExists] error statting %s: %+v", directory, err)
+			return err
+		}
+	}
+	return nil
+}
+
 func mountFilesystem(pool, filesystem, mountpoint string) error {
+	err := makeDirectoryIfNotExists(mountpoint)
+	if err != nil {
+		return err
+	}
 	args := []string{pool + "/" + filesystem, mountpoint}
 	cmd := exec.Command(MOUNT_ZFS, args...)
 	output, err := cmd.CombinedOutput()
