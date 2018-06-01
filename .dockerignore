@@ -1,0 +1,4 @@
+*-state/
+*-kernel
+*-initrd
+*.iso
