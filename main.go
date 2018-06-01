@@ -92,6 +92,7 @@ func main() {
 	log.Printf("Admin API key is: %s", adminApiKey)
 
 	var result bool
+	var resultString string
 
 	for {
 		err := doRPC("localhost", "admin", adminApiKey, "DotmeshRPC.Ping", nil, &result)
@@ -123,16 +124,29 @@ func main() {
 		// dothub.com/justincormack/postgres
 
 	} else {
-		err = doRPC(
+		// see if the dot already exists
+		if err := doRPC(
 			"localhost", "admin", adminApiKey,
-			"DotmeshRPC.Create",
+			"DotmeshRPC.Exists",
 			map[string]string{"Name": *flagDot, "Namespace": "admin"},
-			&result,
-		)
-		if err != nil {
+			&resultString,
+		); err != nil {
 			panic(err)
 		}
-		log.Printf("Created dot %s!", *flagDot)
+		// create if does not exist
+		if resultString == "" {
+			if err := doRPC(
+				"localhost", "admin", adminApiKey,
+				"DotmeshRPC.Create",
+				map[string]string{"Name": *flagDot, "Namespace": "admin"},
+				&result,
+			); err != nil {
+				panic(err)
+			}
+			log.Printf("Created dot %s!", *flagDot)
+		} else {
+			log.Printf("Found existing dot %s!", *flagDot)
+		}
 	}
 
 	// TODO: mount the dot on the filesystem at flagMountpoint, after doing
