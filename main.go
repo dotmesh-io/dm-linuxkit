@@ -48,6 +48,14 @@ func main() {
 		"credentials-file", "/run/dotmesh/config/credentials",
 		"File containing <API username>:<API key> for use with -seed",
 	)
+	flagAdminApiKeyFile := flag.String(
+		"admin-api-key-file", "/run/dotmesh/config/admin-api-key",
+		"Initial admin API key for the local dotmesh",
+	)
+	flagAdminPasswordFile := flag.String(
+		"admin-password-file", "/run/dotmesh/config/admin-password",
+		"Initial admin password for the local dotmesh",
+	)
 	flag.Parse()
 
 	err := setupZFS(*flagPool, strings.Split(*flagStorageDevice, ","))
@@ -60,14 +68,19 @@ func main() {
 		panic(err)
 	}
 
-	adminPassword, err := GenerateRandomString(16)
+	adminPasswordBytes, err := ioutil.ReadFile(*flagAdminPasswordFile)
 	if err != nil {
 		panic(err)
 	}
-	adminApiKey, err := GenerateRandomString(16)
+
+	adminPassword := string(adminPasswordBytes)
+
+	adminApiKeyBytes, err := ioutil.ReadFile(*flagAdminApiKeyFile)
 	if err != nil {
 		panic(err)
 	}
+
+	adminApiKey := string(adminApiKeyBytes)
 
 	dotmeshCmd, err := runDotmesh(*flagPool, adminPassword, adminApiKey)
 	if err != nil {
