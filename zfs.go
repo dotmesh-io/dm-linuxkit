@@ -37,6 +37,14 @@ func calculateMountpoint(pool, fs string) string {
 
 func filesystemMounted(pool, fs string) (bool, error) {
 	// is filesystem mounted?
+
+	log.Printf("=============================")
+	log.Printf(
+		"Checking whether filesystem is mounted at %s",
+		calculateMountpoint(pool, fs),
+	)
+	log.Printf("=============================")
+
 	code, err := returnCode(
 		"mountpoint",
 		calculateMountpoint(pool, fs),

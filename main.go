@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -43,12 +44,11 @@ func main() {
 		"Exit immediately, useful for initializing things on boot. "+
 			"Otherwise, runs as long-running daemon to support e.g. dm CLI interactions",
 	)
-	flag.Parse()
-
-	log.Printf(
-		"%s %s %s %s %s %b",
-		*flagStorageDevice, *flagPool, *flagDot, *flagMountpoint, *flagSeed, *flagOneShot,
+	flagCredentialsFile := flag.String(
+		"credentials-file", "/run/dotmesh/config/credentials",
+		"File containing <API username>:<API key> for use with -seed",
 	)
+	flag.Parse()
 
 	err := setupZFS(*flagPool, strings.Split(*flagStorageDevice, ","))
 	if err != nil {
@@ -90,18 +90,37 @@ func main() {
 		time.Sleep(1 * time.Second)
 	}
 
-	// TODO if flagSeed { clone ... } else {
-	err = doRPC(
-		"localhost", "admin", adminApiKey,
-		"DotmeshRPC.Create",
-		map[string]string{"Name": *flagDot, "Namespace": "admin"},
-		&result,
-	)
-	// }
-	if err != nil {
-		panic(err)
+	if *flagSeed != "" {
+		// Extract api username and key from environment metadata.
+		credentialsBytes, err := ioutil.ReadFile(*flagCredentialsFile)
+		if err != nil {
+			log.Printf(
+				"Unable to read credentials file at %s, see the "+
+					"README for how to provide credentials for seeding.",
+				*flagCredentialsFile,
+			)
+			panic(err)
+		}
+		// XXX handle :s in the username
+		shrapnel := strings.Split(string(credentialsBytes), ":")
+		username := shrapnel[0]
+		apiKey := shrapnel[1]
+		log.Printf("got username=%s, apiKey=%s", username, apiKey)
+
+		// dothub.com/justincormack/postgres
+
+	} else {
+		err = doRPC(
+			"localhost", "admin", adminApiKey,
+			"DotmeshRPC.Create",
+			map[string]string{"Name": *flagDot, "Namespace": "admin"},
+			&result,
+		)
+		if err != nil {
+			panic(err)
+		}
+		log.Printf("Created dot %s!", *flagDot)
 	}
-	log.Printf("Created dot %s!", *flagDot)
 
 	// TODO: mount the dot on the filesystem at flagMountpoint, after doing
 	// mkdir flagMountpoint
