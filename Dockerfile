@@ -6,6 +6,6 @@ RUN go install -ldflags "-X main.serverVersion=${VERSION}"
 
 FROM quay.io/coreos/etcd:v3.3 AS etcd
 
-FROM quay.io/dotmesh/dotmesh-server:41bca20beb210def3275de37653d0f5396555980
+FROM quay.io/dotmesh/dotmesh-server:077b79653c7241257b266582ab365c22940d587b
 COPY --from=build /go/bin/dm-linuxkit /usr/local/bin/dm-linuxkit
 COPY --from=etcd /usr/local/bin/etcd /usr/local/bin/etcd
