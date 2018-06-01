@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+	"time"
 )
 
 const ZPOOL = "zpool"
@@ -157,4 +158,22 @@ func returnCode(name string, arg ...string) (int, error) {
 	}
 	// got here, so err == nil
 	return 0, nil
+}
+
+func tryUntilSucceedsN(f func() error, desc string, retries int) error {
+	attempt := 0
+	for {
+		err := f()
+		if err != nil {
+			if attempt > retries {
+				return err
+			} else {
+				fmt.Printf("Error %s: %v, pausing and trying again...\n", desc, err)
+				time.Sleep(time.Duration(attempt) * time.Second)
+			}
+		} else {
+			return nil
+		}
+		attempt++
+	}
 }

@@ -125,12 +125,14 @@ func main() {
 
 	} else {
 		// see if the dot already exists
-		if err := doRPC(
-			"localhost", "admin", adminApiKey,
-			"DotmeshRPC.Exists",
-			map[string]string{"Name": *flagDot, "Namespace": "admin"},
-			&resultString,
-		); err != nil {
+		if err := tryUntilSucceedsN(func() error {
+			return doRPC(
+				"localhost", "admin", adminApiKey,
+				"DotmeshRPC.Exists",
+				map[string]string{"Name": *flagDot, "Namespace": "admin"},
+				&resultString,
+			)
+		}, fmt.Sprintf("check if %s exists", *flagDot), 5); err != nil {
 			panic(err)
 		}
 		// create if does not exist
