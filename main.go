@@ -45,15 +45,15 @@ func main() {
 			"Otherwise, runs as long-running daemon to support e.g. dm CLI interactions",
 	)
 	flagCredentialsFile := flag.String(
-		"credentials-file", "/run/dotmesh/config/credentials",
+		"credentials-file", "/run/config/dotmesh/credentials",
 		"File containing <API username>:<API key> for use with -seed",
 	)
 	flagAdminApiKeyFile := flag.String(
-		"admin-api-key-file", "/run/dotmesh/config/admin-api-key",
+		"admin-api-key-file", "/run/config/dotmesh/admin-api-key",
 		"Initial admin API key for the local dotmesh",
 	)
 	flagAdminPasswordFile := flag.String(
-		"admin-password-file", "/run/dotmesh/config/admin-password",
+		"admin-password-file", "/run/config/dotmesh/admin-password",
 		"Initial admin password for the local dotmesh",
 	)
 	flag.Parse()
