@@ -28,6 +28,8 @@ func main() {
 		"dot", "",
 		"Name of dotmesh datadot to use (docs.dotmesh.com/concepts/what-is-a-datadot)",
 	)
+	// TODO: Add a flag for specifying a branch of a dot, rather than always
+	// defaulting to master.
 	flagMountpoint := flag.String(
 		"mountpoint", "",
 		"Where to mount the datadot on the host",
@@ -103,6 +105,31 @@ func main() {
 
 	// TODO: mount the dot on the filesystem at flagMountpoint, after doing
 	// mkdir flagMountpoint
+
+	// Find the ID of the dot.
+	var lookupResult string
+	err = doRPC(
+		"localhost", "admin", adminApiKey,
+		"DotmeshRPC.Lookup",
+		map[string]string{"Name": *flagDot, "Namespace": "admin"},
+		&lookupResult,
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	// TODO: switch this to running DotmeshRPC.Procure once that yields actual
+	// mount points, rather than symlinks.
+	// Related: https://github.com/dotmesh-io/dotmesh/issues/421
+
+	err = mountFilesystem(
+		*flagPool,
+		"dmfs/"+lookupResult,
+		*flagMountpoint,
+	)
+	if err != nil {
+		panic(err)
+	}
 
 	// SHUTDOWN FOLLOWS
 
