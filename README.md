@@ -7,10 +7,21 @@ You need to create a `metadata.json` file with the dotmesh hub account like this
      "entries": {
        "credentials": {
           "content": "username:API key"
+       },
+       "local-admin-key": {
+          "content": "key"
+       },
+       "local-admin-password": {
+          "content": "password"
        }
-     }
+    }
   }
 }
+```
+
+You can generate the local key and password with
+```
+dd if=/dev/urandom bs=1 count=32 2>/dev/null | base64
 ```
 
 # dm-linuxkit
