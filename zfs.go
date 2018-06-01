@@ -35,19 +35,11 @@ func calculateMountpoint(pool, fs string) string {
 	return "/var/" + pool + "/dmfs/" + fs
 }
 
-func filesystemMounted(pool, fs string) (bool, error) {
+func filesystemMounted(path string) (bool, error) {
 	// is filesystem mounted?
-
-	log.Printf("=============================")
-	log.Printf(
-		"Checking whether filesystem is mounted at %s",
-		calculateMountpoint(pool, fs),
-	)
-	log.Printf("=============================")
-
 	code, err := returnCode(
 		"mountpoint",
-		calculateMountpoint(pool, fs),
+		path,
 	)
 	if err != nil {
 		return false, err
