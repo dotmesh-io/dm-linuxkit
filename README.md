@@ -1,3 +1,18 @@
+# linuxkit example
+
+You need to create a `metadata.json` file with the dotmesh hub account like this
+```
+{
+  "dotmesh": {
+     "entries": {
+       "credentials": {
+          "content": "username:API key"
+       }
+     }
+  }
+}
+```
+
 # dm-linuxkit
 A utility for mounting dotmesh dots on a local running operating system, whether VM or bare-metal, in particular integrating with (but not requiring) [LinuxKit from Docker](https://github.com/linuxkit/linuxkit).
 

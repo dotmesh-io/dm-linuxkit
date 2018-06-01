@@ -26,4 +26,4 @@ test: build disk.img
 linuxkit: build
 	linuxkit build dotmesh.yml
 	rm -rf dotmesh-state
-	linuxkit run qemu -accel tcg -disk size=1024M -mem 2048 dotmesh
+	linuxkit run qemu -accel tcg -data-file metadata.json -disk size=1024M -mem 2048 dotmesh
