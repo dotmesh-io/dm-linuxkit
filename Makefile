@@ -27,3 +27,6 @@ linuxkit: build
 	linuxkit build dotmesh.yml
 	rm -rf dotmesh-state
 	linuxkit run qemu -accel tcg -data-file metadata.json -disk size=1024M -mem 2048 dotmesh
+
+clean:
+	rm -rf *-state *-kernel *-cmdline *-initrd.img *.iso
