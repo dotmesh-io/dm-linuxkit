@@ -89,8 +89,6 @@ func main() {
 
 	// TODO: wait for dotmesh to start, make a dot.
 
-	log.Printf("Admin API key is: %s", adminApiKey)
-
 	var result bool
 	var resultString string
 
