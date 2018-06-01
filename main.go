@@ -125,7 +125,7 @@ func main() {
 	err = bindMountFilesystem(
 		// Seems like this MOUNT_PREFIX of /var is set in dotmesh utils.go
 		// (unless MOUNT_PREFIX is set, and we're not setting it...)
-		"/var/"+*flagPool+"/dmfs/"+lookupResult,
+		calculateMountpoint(*flagPool, lookupResult),
 		*flagMountpoint,
 	)
 	if err != nil {
@@ -186,9 +186,15 @@ func runEtcd(pool string) (*exec.Cmd, error) {
 			return nil, err
 		}
 	}
-	err = mountFilesystem(pool, "dotmesh-etcd", ETCD_DATA_DIR)
+	mounted, err := filesystemMounted(pool, "dotmesh-etcd")
 	if err != nil {
-		return nil, err
+		panic(err)
+	}
+	if !mounted {
+		err = mountFilesystem(pool, "dotmesh-etcd", ETCD_DATA_DIR)
+		if err != nil {
+			return nil, err
+		}
 	}
 	// 2. start etcd
 	cmd := exec.Command("etcd",
