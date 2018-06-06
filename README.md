@@ -79,7 +79,7 @@ Presto! You have dotness available on your server. No containers required!
 
 ## use on GCP
 
-Set up your LinuxKit GCP environemnt as in [the LinuxKit GCP docs](https://github.com/linuxkit/linuxkit/blob/master/docs/platform-gcp.md).
+Set up your LinuxKit GCP environment as in [the LinuxKit GCP docs](https://github.com/linuxkit/linuxkit/blob/master/docs/platform-gcp.md).
 
 Open the dotmesh port on GCP:
 ```
@@ -90,7 +90,7 @@ Then you can run machines with
 ```
 linuxkit build -format gcp dotmesh.yml
 linuxkit push gcp dotmesh
-linuxkit run gcp -data-file metadata.json -disk size=1G dotmesh
+linuxkit run gcp -data-file metadata.json -disk size=1G -name dotmesh0 dotmesh
 ```
 
 You need the latest master `linuxkit` build to support metadata on GCP.
