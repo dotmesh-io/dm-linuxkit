@@ -77,6 +77,23 @@ In addition to the above steps, this will seed it from the dot at `dothub.com/ju
 
 Presto! You have dotness available on your server. No containers required!
 
+## use on GCP
+
+Set up your LinuxKit GCP environemnt as in [the LinuxKit GCP docs](https://github.com/linuxkit/linuxkit/blob/master/docs/platform-gcp.md).
+
+Open the dotmesh port on GCP:
+```
+gcloud compute firewall-rules create "dotmesh" --allow tcp:32607 --description="Allow dotmesh access"
+```
+
+Then you can run machines with
+```
+linuxkit build -format gcp dotmesh.yml
+linuxkit push gcp dotmesh
+linuxkit run gcp -data-file metadata.json -disk size=1G dotmesh
+```
+
+You need the latest master `linuxkit` build to support metadata on GCP.
 
 ## design
 
