@@ -15,6 +15,55 @@ import (
 
 const ETCD_DATA_DIR = "/var/dotmesh/etcd"
 const ETCD_ENDPOINT = "http://localhost:2379"
+const RPC_TIMEOUT = 1 * time.Minute
+
+// TODO: factor this out. https://github.com/dotmesh-io/dotmesh/issues/44
+
+type TransferRequest struct {
+	Peer             string
+	User             string
+	ApiKey           string
+	Direction        string
+	LocalNamespace   string
+	LocalName        string
+	LocalBranchName  string
+	RemoteNamespace  string
+	RemoteName       string
+	RemoteBranchName string
+	TargetCommit     string
+}
+
+type TransferPollResult struct {
+	TransferRequestId string
+	Peer              string // hostname
+	User              string
+	ApiKey            string // protected value in toString()
+	Direction         string // "push" or "pull"
+
+	// Hold onto this information, it might become useful for e.g. recursive
+	// receives of clone filesystems.
+	LocalFilesystemName  string
+	LocalCloneName       string
+	RemoteFilesystemName string
+	RemoteCloneName      string
+
+	// Same across both clusters
+	FilesystemId string
+
+	InitiatorNodeId string
+	PeerNodeId      string
+
+	StartingSnapshot string
+	TargetSnapshot   string
+
+	Index              int    // i.e. transfer 1/4 (Index=1)
+	Total              int    //                   (Total=4)
+	Status             string // one of "starting", "running", "finished", "error"
+	NanosecondsElapsed int64
+	Size               int64 // size of current segment in bytes
+	Sent               int64 // number of bytes of current segment sent so far
+	Message            string
+}
 
 func main() {
 	flagStorageDevice := flag.String(
@@ -119,7 +168,114 @@ func main() {
 		apiKey := shrapnel[1]
 		log.Printf("got username=%s, apiKey=%s", username, apiKey)
 
-		// dothub.com/justincormack/postgres
+		// TODO interpret 'dothub.com/justincormack/postgres'
+		shrapnel = strings.Split(*flagSeed, "/")
+		if len(shrapnel) != 3 {
+			panic(fmt.Errorf(
+				"Need exactly two '/'s in -seed argument, " +
+					"e.g. 'dothub.com/justincormack/postgres'",
+			))
+		}
+		hostname := shrapnel[0]        // dothub.com
+		remoteNamespace := shrapnel[1] // e.g. justincormack
+		remoteName := shrapnel[2]      // e.g. postgres
+
+		var transferId string
+		err = doRPC(
+			"localhost", "admin", adminApiKey,
+			"DotmeshRPC.Transfer", TransferRequest{
+				Peer:             hostname,
+				User:             username,
+				ApiKey:           apiKey,
+				Direction:        "pull",
+				LocalNamespace:   "admin",
+				LocalName:        *flagDot,
+				LocalBranchName:  "",
+				RemoteNamespace:  remoteNamespace,
+				RemoteName:       remoteName,
+				RemoteBranchName: "",
+			}, &transferId)
+		if err != nil {
+			panic(err)
+		}
+
+		err = func() error {
+			started := false
+			debugMode := true
+
+			for {
+				if debugMode {
+					log.Printf("DEBUG About to sleep for 1s...")
+				}
+				time.Sleep(time.Second)
+				result := &TransferPollResult{}
+
+				if debugMode {
+					log.Printf("DEBUG Calling GetTransfer(%s)...", transferId)
+				}
+				err := doRPC(
+					"localhost", "admin", adminApiKey,
+					"DotmeshRPC.GetTransfer", transferId, result,
+				)
+				if debugMode {
+					log.Printf(
+						"DEBUG done GetTransfer(%s), got err %#v and result %#v...",
+						transferId, err, result,
+					)
+				}
+				if debugMode {
+					log.Printf("DEBUG rpcError consumed!")
+				}
+
+				if debugMode {
+					log.Printf("DEBUG Got err: %s", err)
+				}
+				if err != nil {
+					if !strings.Contains(fmt.Sprintf("%s", err), "No such intercluster transfer") {
+						log.Printf("Got error, trying again: %s", err)
+					}
+				}
+
+				if debugMode {
+					log.Printf("Got DotmeshRPC.GetTransfer response: %+v", result)
+				}
+				if !started {
+					log.Printf("Starting transfer of %d bytes...", result.Size)
+					started = true
+				}
+				log.Printf(result.Status)
+				var speed string
+				if result.NanosecondsElapsed > 0 {
+					speed = fmt.Sprintf(" %.2f MiB/s",
+						// mib/sec
+						(float64(result.Sent)/(1024*1024))/
+							(float64(result.NanosecondsElapsed)/(1000*1000*1000)),
+					)
+				} else {
+					speed = " ? MiB/s"
+				}
+				quotient := fmt.Sprintf(" (%d/%d)", result.Index, result.Total)
+				log.Printf(speed + quotient)
+
+				if result.Index == result.Total && result.Status == "finished" {
+					if started {
+						log.Printf("Done!")
+					}
+					time.Sleep(time.Second)
+					return nil
+				}
+				if result.Status == "error" {
+					if started {
+						log.Printf("error: %s", result.Message)
+					}
+					time.Sleep(time.Second)
+					return fmt.Errorf(result.Message)
+				}
+			}
+		}()
+		if err != nil {
+			panic(err)
+		}
 
 	} else {
 		// see if the dot already exists
