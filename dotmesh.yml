@@ -29,6 +29,8 @@ onboot:
      - /etc/resolv.conf:/etc/resolv.conf
      - /run/config/dotmesh:/run/config/dotmesh
     rootfsPropagation: shared
+    env:
+     - CONTAINER_RUNTIME=null # disable dotmesh docker integration
     command: ["dm-linuxkit", "-dot=test", "-storage-device=/dev/sda", "-mountpoint=/var/dot/test", "-oneshot", "-pool-name=dotmesh-pool"]
 services:
   - name: rngd
@@ -43,6 +45,8 @@ services:
      - /etc/resolv.conf:/etc/resolv.conf
      - /run/config/dotmesh:/run/config/dotmesh
     rootfsPropagation: shared
+    env:
+     - CONTAINER_RUNTIME=null # disable dotmesh docker integration
     command: ["dm-linuxkit", "-dot=test", "-storage-device=/dev/sda", "-mountpoint=/var/dot/test", "-pool-name=dotmesh-pool"]
 files:
   - path: etc/linuxkit-config
