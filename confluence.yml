@@ -1,0 +1,61 @@
+kernel:
+  image: linuxkit/kernel:4.9.95
+  cmdline: "console=tty0 console=ttyS0 console=ttyAMA0"
+init:
+  - justincormack/zfs-kmod:4.9.95
+  - linuxkit/init:v0.4
+  - linuxkit/runc:v0.4
+  - linuxkit/containerd:v0.4
+  - linuxkit/ca-certificates:v0.4
+  - linuxkit/getty:v0.4
+onboot:
+  - name: sysctl
+    image: linuxkit/sysctl:v0.4
+  - name: dhcpcd
+    image: linuxkit/dhcpcd:v0.4
+    command: ["/sbin/dhcpcd", "--nobackground", "-f", "/dhcpcd.conf", "-1"]
+  - name: modprobe
+    image: linuxkit/modprobe:v0.4
+    command: ["modprobe", "zfs"]
+  - name: metadata
+    image: linuxkit/metadata:v0.4
+  - name: dotmesh
+    image: lmarsden/dm-linuxkit
+    capabilities:
+     - all
+    binds:
+     - /dev:/dev
+     - /var:/var:rshared,rbind
+     - /etc/resolv.conf:/etc/resolv.conf
+     - /run/config/dotmesh:/run/config/dotmesh
+    rootfsPropagation: shared
+    command: ["dm-linuxkit", "-dot=test", "-storage-device=/dev/sda", "-mountpoint=/var/dot/test", "-oneshot", "-pool-name=dotmesh-pool"]
+services:
+  - name: rngd
+    image: linuxkit/rngd:v0.4
+  - name: dotmesh
+    image: lmarsden/dm-linuxkit
+    capabilities:
+     - all
+    binds:
+     - /dev:/dev
+     - /var:/var:rshared,rbind
+     - /etc/resolv.conf:/etc/resolv.conf
+     - /run/config/dotmesh:/run/config/dotmesh
+    rootfsPropagation: shared
+    command: ["dm-linuxkit", "-dot=test", "-storage-device=/dev/sda", "-mountpoint=/var/dot/test", "-pool-name=dotmesh-pool"]
+  - name: confluence
+    image: atlassian/confluence-server
+    capabilities:
+     - CAP_CHOWN
+     - CAP_SETGID
+     - CAP_SETUID
+    binds:
+     - /var/dot/test:/var/atlassian/application-data/confluence
+files:
+  - path: etc/linuxkit-config
+    metadata: yaml
+trust:
+  org:
+    - linuxkit
+    - library
