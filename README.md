@@ -24,6 +24,8 @@ You can generate the local key and password with
 dd if=/dev/urandom bs=1 count=32 2>/dev/null | base64
 ```
 
+To seed, add a key `"seed"` with a value such as `"dothub.com/justincormack/postgres"`.
+
 # dm-linuxkit
 A utility for mounting dotmesh dots on a local running operating system, whether VM or bare-metal, in particular integrating with (but not requiring) [LinuxKit from Docker](https://github.com/linuxkit/linuxkit).
 
@@ -64,16 +66,16 @@ This will:
 3. Create a dot called `postgres`
 4. Mount the dot at `/var/lib/postgres`
 
-If you want to seed it:
+If you want to seed it, set `seed` in your `metadata.json` to e.g. `dothub.com/justincormack/postgres`, and then configure a linuxkit with the same command:
 
 ```
 dm-linuxkit --storage-device=/dev/nvme0,/dev/nvme1 --dot=postgres \
-    --seed=dothub.com/justincormack/postgres --mountpoint=/var/lib/postgres
+    --mountpoint=/var/lib/postgres
 ```
 
 Note that this will use the dothub credentials from `credentials` in your `metadata.json`.
 
-In addition to the above steps, this will seed it from the dot at `dothub.com/justincormack/postgres`.
+In addition to the above steps, this will seed it (pull down the data to initialize it) from the dot at `dothub.com/justincormack/postgres`.
 
 Presto! You have dotness available on your server. No containers required!
 
@@ -135,19 +137,25 @@ dm-linuxkit --zpool-device=/dev/nvme0 --zpool-device=/dev/nvme1 --daemon
 
 ### case 1 - seperate dots
 
+seed = `dothub.com/justincormack/postgres` in `metadata.json`
 ```
 dm-linuxkit --zpool-device=/dev/nvme0,/dev/nvme1 --dot=postgres \
-    --seed=dothub.com/justincormack/postgres --mountpoint=/var/lib/postgres
+    --mountpoint=/var/lib/postgres
+```
+
+seed = `dothub.com/justincormack/redis` in metadata.json
+```
 dm-linuxkit --zpool-device=/dev/nvme0,/dev/nvme1 --dot=redis \
-    --seed=dothub.com/justincormack/redis --mountpoint=/var/lib/redis
+    --mountpoint=/var/lib/redis
 ```
 
 ### case 2 - subdots
+seed = `dothub.com/justincormack/myapp` in metadata.json for both runs:
 ```
 dm-linuxkit --zpool-device=/dev/nvme0,/dev/nvme1 --dot=myapp.postgres \
-    --seed=dothub.com/justincormack/myapp --mountpoint=/var/lib/postgres
+    --mountpoint=/var/lib/postgres
 dm-linuxkit --zpool-device=/dev/nvme0,/dev/nvme1 --dot=myapp.redis \
-    --seed=dothub.com/justincormack/myapp --mountpoint=/var/lib/redis
+    --mountpoint=/var/lib/redis
 ```
 
 (second 'seed' is a no-op)

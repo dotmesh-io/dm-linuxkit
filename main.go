@@ -421,8 +421,9 @@ func runDotmesh(pool, adminPassword, adminApiKey string) (*exec.Cmd, error) {
 	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env,
 		// TODO: disable docker volume plugin
-		// TODO: disable docker integration
-		"DISABLE_FLEXVOLUME=1",
+		"CONTAINER_RUNTIME=null",                            // disables docker integration
+		"CONTAINER_MOUNT_PREFIX=/var/dotmesh/container_mnt", // must be set in newer dotmeshes
+		"DISABLE_FLEXVOLUME=1",                              // don't install kubernetes driver
 		fmt.Sprintf("DOTMESH_ETCD_ENDPOINT=%s", ETCD_ENDPOINT),
 		fmt.Sprintf("POOL=%s", pool),
 		fmt.Sprintf("INITIAL_ADMIN_API_KEY=%s", adminApiKeyBase64),
