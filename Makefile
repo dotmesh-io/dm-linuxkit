@@ -42,5 +42,13 @@ get-dotmesh0-ip:
 get-dotmesh1-ip:
 	gcloud compute instances describe --format json dotmesh1 | jq .networkInterfaces[0].accessConfigs[0].natIP |tr -d '"'
 
+build-jenkins:
+	linuxkit build -format gcp jenkins.yml
+	linuxkit push gcp jenkins.img.tar.gz
+	linuxkit build jenkins.yml
+
+run-jenkins-gcp:
+	linuxkit run gcp -machine n1-standard-1 -data-file metadata.json -disk size=1G jenkins
+
 clean:
 	rm -rf *-state *-kernel *-cmdline *-initrd.img *.iso

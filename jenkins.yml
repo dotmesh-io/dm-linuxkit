@@ -54,6 +54,7 @@ services:
      - CAP_SETUID
     binds:
      - /var/dot/test:/var/jenkins_home
+     - /etc/resolv.conf:/etc/resolv.conf
 files:
   - path: etc/linuxkit-config
     metadata: yaml
