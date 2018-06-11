@@ -36,5 +36,11 @@ build-and-push-gcp: build
 	echo "or:"
 	echo "    linuxkit run gcp -data-file metadata-seed.json -disk size=1G -name dotmesh1 dotmesh"
 
+get-dotmesh0-ip:
+	gcloud compute instances describe --format json dotmesh0 | jq .networkInterfaces[0].accessConfigs[0].natIP |tr -d '"'
+
+get-dotmesh1-ip:
+	gcloud compute instances describe --format json dotmesh1 | jq .networkInterfaces[0].accessConfigs[0].natIP |tr -d '"'
+
 clean:
 	rm -rf *-state *-kernel *-cmdline *-initrd.img *.iso
