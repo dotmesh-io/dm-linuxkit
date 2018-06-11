@@ -34,13 +34,5 @@ build-and-push-gcp: build
 	echo "now run:"
 	echo "    linuxkit run gcp -data-file metadata.json -disk size=1G -name dotmesh0 dotmesh"
 
-# TODO replace this with a single image with varying metadata (to seed or not to seed)
-
-build-and-push-gcp-seed: build
-	linuxkit build -format gcp dotmesh-seed.yml
-	linuxkit push gcp dotmesh-seed.img.tar.gz
-	echo "now run:"
-	echo "    linuxkit run gcp -data-file metadata.json -disk size=1G -name dotmesh1 dotmesh-seed"
-
 clean:
 	rm -rf *-state *-kernel *-cmdline *-initrd.img *.iso

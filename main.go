@@ -84,14 +84,14 @@ func main() {
 		"mountpoint", "",
 		"Where to mount the datadot on the host",
 	)
-	flagSeed := flag.String(
-		"seed", "",
-		"Address of a datadot to seed from e.g. dothub.com/justincormack/postgres",
-	)
 	flagOneShot := flag.Bool(
 		"oneshot", false,
 		"Exit immediately, useful for initializing things on boot. "+
 			"Otherwise, runs as long-running daemon to support e.g. dm CLI interactions",
+	)
+	flagSeedFile := flag.String(
+		"seed-file", "/run/config/dotmesh/seed",
+		"File containing address of a datadot to seed from e.g. dothub.com/justincormack/postgres",
 	)
 	flagCredentialsFile := flag.String(
 		"credentials-file", "/run/config/dotmesh/credentials",
@@ -151,7 +151,23 @@ func main() {
 		time.Sleep(1 * time.Second)
 	}
 
-	if *flagSeed != "" {
+	var seed string
+	seedBytes, err := ioutil.ReadFile(*flagSeedFile)
+	if err != nil {
+		if os.IsNotExist(err) {
+			seed = ""
+		} else {
+			log.Printf(
+				"Unable to read seed file at %s, err: %v",
+				*flagSeedFile, err,
+			)
+			panic(err)
+		}
+	} else {
+		seed = string(seedBytes)
+	}
+
+	if seed != "" {
 		// Extract api username and key from environment metadata.
 		credentialsBytes, err := ioutil.ReadFile(*flagCredentialsFile)
 		if err != nil {
@@ -169,7 +185,7 @@ func main() {
 		log.Printf("got username=%s, apiKey=%s", username, apiKey)
 
 		// TODO interpret 'dothub.com/justincormack/postgres'
-		shrapnel = strings.Split(*flagSeed, "/")
+		shrapnel = strings.Split(seed, "/")
 		if len(shrapnel) != 3 {
 			panic(fmt.Errorf(
 				"Need exactly two '/'s in -seed argument, " +
