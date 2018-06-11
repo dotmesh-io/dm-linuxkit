@@ -16,8 +16,6 @@ const ZFS = "zfs"
 const MOUNT_ZFS = "mount.zfs"
 const MOUNT = "mount"
 
-const ROOT_FS = "dmfs"
-
 // TODO dedupe wrt dotmesh's zfs.go
 func findLocalPoolId(pool string) (string, error) {
 	output, err := exec.Command(ZPOOL, "get", "-H", "guid", pool).CombinedOutput()
@@ -31,9 +29,10 @@ func findLocalPoolId(pool string) (string, error) {
 	return fmt.Sprintf("%x", i), nil
 }
 
-// XXX: This might need to change when 401-node-tests lands.
 func calculateMountpoint(pool, fs string) string {
-	return "/var/" + pool + "/dmfs/" + fs
+	// See main.go's env vars for how this is calculated
+	// (MOUNT_PREFIX + "/dmfs")
+	return "/var/dotmesh/mnt/dmfs/" + fs
 }
 
 func filesystemMounted(path string) (bool, error) {
