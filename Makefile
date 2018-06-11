@@ -33,6 +33,8 @@ build-and-push-gcp: build
 	linuxkit push gcp dotmesh.img.tar.gz
 	echo "now run:"
 	echo "    linuxkit run gcp -data-file metadata.json -disk size=1G -name dotmesh0 dotmesh"
+	echo "or:"
+	echo "    linuxkit run gcp -data-file metadata-seed.json -disk size=1G -name dotmesh1 dotmesh"
 
 clean:
 	rm -rf *-state *-kernel *-cmdline *-initrd.img *.iso
