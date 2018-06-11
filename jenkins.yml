@@ -44,14 +44,16 @@ services:
      - /run/config/dotmesh:/run/config/dotmesh
     rootfsPropagation: shared
     command: ["dm-linuxkit", "-dot=test", "-storage-device=/dev/sda", "-mountpoint=/var/dot/test", "-pool-name=dotmesh-pool"]
-  - name: confluence
-    image: atlassian/confluence-server
+  - name: jenkins
+    image: jenkins/jenkins:lts
     capabilities:
      - CAP_CHOWN
+     - CAP_FOWNER
+     - CAP_DAC_OVERRIDE
      - CAP_SETGID
      - CAP_SETUID
     binds:
-     - /var/dot/test:/var/atlassian/application-data/confluence
+     - /var/dot/test:/var/jenkins_home
 files:
   - path: etc/linuxkit-config
     metadata: yaml
