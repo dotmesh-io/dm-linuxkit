@@ -167,187 +167,190 @@ func main() {
 		seed = string(seedBytes)
 	}
 
-	if seed != "" {
-		// Extract api username and key from environment metadata.
-		credentialsBytes, err := ioutil.ReadFile(*flagCredentialsFile)
-		if err != nil {
-			log.Printf(
-				"Unable to read credentials file at %s, see the "+
-					"README for how to provide credentials for seeding.",
-				*flagCredentialsFile,
-			)
-			panic(err)
-		}
-		// XXX handle :s in the username
-		shrapnel := strings.Split(string(credentialsBytes), ":")
-		username := shrapnel[0]
-		apiKey := shrapnel[1]
-		log.Printf("got username=%s, apiKey=%s", username, apiKey)
-
-		// TODO interpret 'dothub.com/justincormack/postgres'
-		shrapnel = strings.Split(seed, "/")
-		if len(shrapnel) != 3 {
-			panic(fmt.Errorf(
-				"Need exactly two '/'s in -seed argument, " +
-					"e.g. 'dothub.com/justincormack/postgres'",
-			))
-		}
-		hostname := shrapnel[0]        // dothub.com
-		remoteNamespace := shrapnel[1] // e.g. justincormack
-		remoteName := shrapnel[2]      // e.g. postgres
-
-		var transferId string
-		err = doRPC(
-			"localhost", "admin", adminApiKey,
-			"DotmeshRPC.Transfer", TransferRequest{
-				Peer:             hostname,
-				User:             username,
-				ApiKey:           apiKey,
-				Direction:        "pull",
-				LocalNamespace:   "admin",
-				LocalName:        *flagDot,
-				LocalBranchName:  "",
-				RemoteNamespace:  remoteNamespace,
-				RemoteName:       remoteName,
-				RemoteBranchName: "",
-			}, &transferId)
-		if err != nil {
-			panic(err)
-		}
-
-		err = func() error {
-			started := false
-			debugMode := true
-
-			for {
-				if debugMode {
-					log.Printf("DEBUG About to sleep for 1s...")
-				}
-				time.Sleep(time.Second)
-				result := &TransferPollResult{}
-
-				if debugMode {
-					log.Printf("DEBUG Calling GetTransfer(%s)...", transferId)
-				}
-				err := doRPC(
-					"localhost", "admin", adminApiKey,
-					"DotmeshRPC.GetTransfer", transferId, result,
+	// Clone/create only if we're asked to seed and we're the onboot ("oneshot")
+	if *flagOneShot {
+		if seed != "" {
+			// Extract api username and key from environment metadata.
+			credentialsBytes, err := ioutil.ReadFile(*flagCredentialsFile)
+			if err != nil {
+				log.Printf(
+					"Unable to read credentials file at %s, see the "+
+						"README for how to provide credentials for seeding.",
+					*flagCredentialsFile,
 				)
-				if debugMode {
-					log.Printf(
-						"DEBUG done GetTransfer(%s), got err %#v and result %#v...",
-						transferId, err, result,
-					)
-				}
-				if debugMode {
-					log.Printf("DEBUG rpcError consumed!")
-				}
-
-				if debugMode {
-					log.Printf("DEBUG Got err: %s", err)
-				}
-				if err != nil {
-					if !strings.Contains(fmt.Sprintf("%s", err), "No such intercluster transfer") {
-						log.Printf("Got error, trying again: %s", err)
-					}
-				}
-
-				if debugMode {
-					log.Printf("Got DotmeshRPC.GetTransfer response: %+v", result)
-				}
-				if !started {
-					log.Printf("Starting transfer of %d bytes...", result.Size)
-					started = true
-				}
-				log.Printf(result.Status)
-				var speed string
-				if result.NanosecondsElapsed > 0 {
-					speed = fmt.Sprintf(" %.2f MiB/s",
-						// mib/sec
-						(float64(result.Sent)/(1024*1024))/
-							(float64(result.NanosecondsElapsed)/(1000*1000*1000)),
-					)
-				} else {
-					speed = " ? MiB/s"
-				}
-				quotient := fmt.Sprintf(" (%d/%d)", result.Index, result.Total)
-				log.Printf(speed + quotient)
-
-				if result.Index == result.Total && result.Status == "finished" {
-					if started {
-						log.Printf("Done!")
-					}
-					time.Sleep(time.Second)
-					return nil
-				}
-				if result.Status == "error" {
-					if started {
-						log.Printf("error: %s", result.Message)
-					}
-					time.Sleep(time.Second)
-					return fmt.Errorf(result.Message)
-				}
-			}
-		}()
-		if err != nil {
-			panic(err)
-		}
-
-	} else {
-		// see if the dot already exists
-		if err := tryUntilSucceedsN(func() error {
-			return doRPC(
-				"localhost", "admin", adminApiKey,
-				"DotmeshRPC.Exists",
-				map[string]string{"Name": *flagDot, "Namespace": "admin"},
-				&resultString,
-			)
-		}, fmt.Sprintf("check if %s exists", *flagDot), 5); err != nil {
-			panic(err)
-		}
-		// create if does not exist
-		if resultString == "" {
-			if err := doRPC(
-				"localhost", "admin", adminApiKey,
-				"DotmeshRPC.Create",
-				map[string]string{"Name": *flagDot, "Namespace": "admin"},
-				&result,
-			); err != nil {
 				panic(err)
 			}
-			log.Printf("Created dot %s!", *flagDot)
+			// XXX handle :s in the username
+			shrapnel := strings.Split(string(credentialsBytes), ":")
+			username := shrapnel[0]
+			apiKey := shrapnel[1]
+			log.Printf("got username=%s, apiKey=%s", username, apiKey)
+
+			// TODO interpret 'dothub.com/justincormack/postgres'
+			shrapnel = strings.Split(seed, "/")
+			if len(shrapnel) != 3 {
+				panic(fmt.Errorf(
+					"Need exactly two '/'s in -seed argument, " +
+						"e.g. 'dothub.com/justincormack/postgres'",
+				))
+			}
+			hostname := shrapnel[0]        // dothub.com
+			remoteNamespace := shrapnel[1] // e.g. justincormack
+			remoteName := shrapnel[2]      // e.g. postgres
+
+			var transferId string
+			err = doRPC(
+				"localhost", "admin", adminApiKey,
+				"DotmeshRPC.Transfer", TransferRequest{
+					Peer:             hostname,
+					User:             username,
+					ApiKey:           apiKey,
+					Direction:        "pull",
+					LocalNamespace:   "admin",
+					LocalName:        *flagDot,
+					LocalBranchName:  "",
+					RemoteNamespace:  remoteNamespace,
+					RemoteName:       remoteName,
+					RemoteBranchName: "",
+				}, &transferId)
+			if err != nil {
+				panic(err)
+			}
+
+			err = func() error {
+				started := false
+				debugMode := true
+
+				for {
+					if debugMode {
+						log.Printf("DEBUG About to sleep for 1s...")
+					}
+					time.Sleep(time.Second)
+					result := &TransferPollResult{}
+
+					if debugMode {
+						log.Printf("DEBUG Calling GetTransfer(%s)...", transferId)
+					}
+					err := doRPC(
+						"localhost", "admin", adminApiKey,
+						"DotmeshRPC.GetTransfer", transferId, result,
+					)
+					if debugMode {
+						log.Printf(
+							"DEBUG done GetTransfer(%s), got err %#v and result %#v...",
+							transferId, err, result,
+						)
+					}
+					if debugMode {
+						log.Printf("DEBUG rpcError consumed!")
+					}
+
+					if debugMode {
+						log.Printf("DEBUG Got err: %s", err)
+					}
+					if err != nil {
+						if !strings.Contains(fmt.Sprintf("%s", err), "No such intercluster transfer") {
+							log.Printf("Got error, trying again: %s", err)
+						}
+					}
+
+					if debugMode {
+						log.Printf("Got DotmeshRPC.GetTransfer response: %+v", result)
+					}
+					if !started {
+						log.Printf("Starting transfer of %d bytes...", result.Size)
+						started = true
+					}
+					log.Printf(result.Status)
+					var speed string
+					if result.NanosecondsElapsed > 0 {
+						speed = fmt.Sprintf(" %.2f MiB/s",
+							// mib/sec
+							(float64(result.Sent)/(1024*1024))/
+								(float64(result.NanosecondsElapsed)/(1000*1000*1000)),
+						)
+					} else {
+						speed = " ? MiB/s"
+					}
+					quotient := fmt.Sprintf(" (%d/%d)", result.Index, result.Total)
+					log.Printf(speed + quotient)
+
+					if result.Index == result.Total && result.Status == "finished" {
+						if started {
+							log.Printf("Done!")
+						}
+						time.Sleep(time.Second)
+						return nil
+					}
+					if result.Status == "error" {
+						if started {
+							log.Printf("error: %s", result.Message)
+						}
+						time.Sleep(time.Second)
+						return fmt.Errorf(result.Message)
+					}
+				}
+			}()
+			if err != nil {
+				panic(err)
+			}
+
 		} else {
-			log.Printf("Found existing dot %s!", *flagDot)
+			// see if the dot already exists
+			if err := tryUntilSucceedsN(func() error {
+				return doRPC(
+					"localhost", "admin", adminApiKey,
+					"DotmeshRPC.Exists",
+					map[string]string{"Name": *flagDot, "Namespace": "admin"},
+					&resultString,
+				)
+			}, fmt.Sprintf("check if %s exists", *flagDot), 5); err != nil {
+				panic(err)
+			}
+			// create if does not exist
+			if resultString == "" {
+				if err := doRPC(
+					"localhost", "admin", adminApiKey,
+					"DotmeshRPC.Create",
+					map[string]string{"Name": *flagDot, "Namespace": "admin"},
+					&result,
+				); err != nil {
+					panic(err)
+				}
+				log.Printf("Created dot %s!", *flagDot)
+			} else {
+				log.Printf("Found existing dot %s!", *flagDot)
+			}
 		}
-	}
 
-	// TODO: mount the dot on the filesystem at flagMountpoint, after doing
-	// mkdir flagMountpoint
+		// TODO: mount the dot on the filesystem at flagMountpoint, after doing
+		// mkdir flagMountpoint
 
-	// Find the ID of the dot.
-	var lookupResult string
-	err = doRPC(
-		"localhost", "admin", adminApiKey,
-		"DotmeshRPC.Lookup",
-		map[string]string{"Name": *flagDot, "Namespace": "admin"},
-		&lookupResult,
-	)
-	if err != nil {
-		panic(err)
-	}
+		// Find the ID of the dot.
+		var lookupResult string
+		err = doRPC(
+			"localhost", "admin", adminApiKey,
+			"DotmeshRPC.Lookup",
+			map[string]string{"Name": *flagDot, "Namespace": "admin"},
+			&lookupResult,
+		)
+		if err != nil {
+			panic(err)
+		}
 
-	// TODO: switch this to running DotmeshRPC.Procure once that yields actual
-	// mount points, rather than symlinks.
-	// Related: https://github.com/dotmesh-io/dotmesh/issues/421
+		// TODO: switch this to running DotmeshRPC.Procure once that yields actual
+		// mount points, rather than symlinks.
+		// Related: https://github.com/dotmesh-io/dotmesh/issues/421
 
-	err = bindMountFilesystem(
-		// Seems like this MOUNT_PREFIX of /var is set in dotmesh utils.go
-		// (unless MOUNT_PREFIX is set, and we're not setting it...)
-		calculateMountpoint(*flagPool, lookupResult),
-		*flagMountpoint,
-	)
-	if err != nil {
-		panic(err)
+		err = bindMountFilesystem(
+			// Seems like this MOUNT_PREFIX of /var is set in dotmesh utils.go
+			// (unless MOUNT_PREFIX is set, and we're not setting it...)
+			calculateMountpoint(*flagPool, lookupResult),
+			*flagMountpoint,
+		)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	// SHUTDOWN FOLLOWS
